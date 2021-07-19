@@ -1,3 +1,6 @@
+;; Load config
+;; (org-babel-load-file "~/.emacs.d/README.org")
+
 ;; UI improvements
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
@@ -5,6 +8,7 @@
 (tooltip-mode -1)
 (set-fringe-mode 0)
 (blink-cursor-mode -1)
+(electric-pair-mode 1)
 (toggle-frame-fullscreen)
 
 ;; Backups are irritating
@@ -86,6 +90,17 @@
 
 (use-package ivy-posframe
   :init (ivy-posframe-mode 1)
+  :config
+  ;; constant width
+  ;; https://github.com/tumashu/ivy-posframe/issues/105
+  (defun da/ivy-posframe-get-size ()
+    "Set the ivy-posframe size according to the current frame."
+    (let ((height (or ivy-posframe-height (or ivy-height 10)))
+          (width (min (or ivy-posframe-width 200) (round (* .60 (frame-width))))))
+      (list :height height :width width :min-height height :min-width width)))
+
+  (setq ivy-posframe-size-function 'da/ivy-posframe-get-size)
+
   :custom (ivy-posframe-display-functions-alist
             '((swiper          . ivy-posframe-display-at-frame-center)
               (complete-symbol . ivy-posframe-display-at-frame-center)
@@ -97,7 +112,7 @@
 
 ;; theme
 (use-package doom-themes
-  :init (load-theme 'doom-monokai-classic t))
+  :init (load-theme 'doom-snazzy t))
 
 ;; modeline
 (use-package doom-modeline
@@ -149,7 +164,7 @@
 
 ;; evil keybindings for common emacs modes
 (use-package evil-collection
-  :after evil
+  :after evil magit
   :config
   (evil-collection-init))
 
@@ -165,6 +180,7 @@
   (global-evil-surround-mode 1))
 
 ;; better keybindings
+(defun da/save-all () (interactive) (save-some-buffers t))
 (use-package general
   :config
   (general-create-definer my/leader
@@ -173,10 +189,13 @@
     :global-prefix "C-SPC")
   (my/leader
     "w"   'save-buffer
-    "SPC" 'save-buffer
+    "SPC" 'da/save-all
     "q"   'delete-window
     "s"   'vterm
+    "b"   'counsel-ibuffer
     "g"   'magit
+    "a"   'org-agenda
+    "c"   'org-capture
     "x"   'counsel-M-x
     "p"   'counsel-find-file
     "t"   'counsel-find-file))
@@ -203,8 +222,83 @@
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-;; (use-package evil-magit
-;;   :after magit)
-
 (use-package magit-delta
   :hook (magit-mode . magit-delta-mode))
+
+;; org mode
+(defun da/org-mode-font-setup ()
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  ;; Hide the ugly stuff
+  (setq org-hide-emphasis-markers t)
+
+  ;; Set faces for heading levels
+  (dolist (face '((org-level-1 . 1.05)
+                  (org-level-2 . 1.05)
+                  (org-level-3 . 1.05)
+                  (org-level-4 . 1.05)
+                  (org-level-5 . 1.05)
+                  (org-level-6 . 1.05)
+                  (org-level-7 . 1.05)
+                  (org-level-8 . 1.05)))
+    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+  (set-face-attribute 'variable-pitch nil :font "Cantarell" :height 110)
+
+  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+
+(defun da/org-mode-hook ()
+  (org-indent-mode 1)
+  (variable-pitch-mode 1)
+  (visual-line-mode 1)
+  (display-line-numbers-mode 0))
+
+(use-package org
+  :hook (org-mode . da/org-mode-hook)
+  :config
+  (setq org-ellipsis " ▾")
+
+  ;; Agenda
+  (setq org-agenda-files (directory-files-recursively "~/notes/" "\\.org$"))
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+
+  ;; Capture
+  (setq org-default-notes-file "~/notes/capture.org")
+  (setq org-capture-templates
+      '(("l" "Link" entry (file+datetree "~/notes/links.org")
+         "* %?\nEntered on %U\n  %i\n")))
+
+  (da/org-mode-font-setup))
+
+
+(use-package org-bullets
+  :after org
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("●" "●" "●" "●" "●" "●" "●")))
+
+(defun da/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . da/org-mode-visual-fill))
+
+(use-package evil-org
+  :ensure t
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
