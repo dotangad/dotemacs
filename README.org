@@ -426,12 +426,24 @@ Decrease window text and center window.
 #+end_src
 
 ** Capture
+The [[https://orgmode.org/manual/Template-expansion.html#Template-expansion][Template Expansion page]] in the org-mode documentation is particularly helpful when writing org-capture templates. They seem terse and intricate at first, but once I skimmed through the page I was able to write my first template with little difficulty.
+
 #+begin_src emacs-lisp
   (setq org-default-notes-file "~/notes/capture.org")
   (setq org-capture-templates
-    '(("l" "Link" entry (file+datetree "~/notes/links.org")
-       "* %?\nEntered on %U\n  %i\n")))
+    '(("l" "Link" entry (file "~/notes/links.org")
+       "* [[%x][%?]]\n:PROPERTIES:\n:Tags: %^g\n:END:\n%U")
+      ("b" "Book" entry (file "~/notes/books.org")
+        "* %?\n%U\n:PROPERTIES:\n:Author: %?\n:Tags: %^g\n:END:\n")
+      ("c" "College Index" entry (file+headline "~/notes/College/College.org" "Index")
+        "* %?\n%T")
+      ("r" "Resource (something you'd like to get back to)" entry (file "~/notes/for-later.org")
+        "* [[%x][%?]]\n%U\n:PROPERTIES:\n:Tags: %^g\n:END:\n")))
 #+end_src
+
+*** Capture templates I'd like
+**** Timestamped entry into my weekly file
+Function which searches for current weekly file, and today's heading.
 
 ** Install latest org-mode
 #+begin_src emacs-lisp
