@@ -3,3 +3,6 @@ elpa/
 eshell/history
 games/
 transient/
+bookmarks
+tags
+README.el

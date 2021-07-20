@@ -1,0 +1,443 @@
+#+title: Angad Singh's Emacs Config
+
+Heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs From Scratch]].
+
+* Personal information
+#+begin_src emacs-lisp
+(setq user-full-name "Angad Singh"
+      user-mail-address "mail@angad.dev")
+#+end_src
+
+* Improvements
+** UI Stuff
+#+begin_src emacs-lisp
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (menu-bar-mode -1)
+  (tooltip-mode -1)
+  (set-fringe-mode 0)
+  (blink-cursor-mode -1)
+  (global-hl-line-mode 1)
+  (toggle-frame-fullscreen)
+#+end_src
+
+** No audible bell
+#+begin_src emacs-lisp
+(setq visible-bell t)
+#+end_src
+
+** Auto pair delimeters
+#+begin_src emacs-lisp
+(electric-pair-mode 1)
+#+end_src
+
+** Make ESC quit prompts
+#+begin_src emacs-lisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
+** No backups
+#+begin_src emacs-lisp
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+#+end_src
+
+** Use different custom file
+#+begin_src emacs-lisp
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file)
+#+end_src
+
+** Line and column numbers
+#+begin_src emacs-lisp
+(column-number-mode)
+(global-display-line-numbers-mode t)
+#+end_src
+
+*** Switch them off in some modes
+#+begin_src emacs-lisp
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+		vterm-mode-hook
+                shell-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+#+end_src
+
+* Package management and =use-package=
+#+begin_src emacs-lisp
+(require 'package)
+
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+
+(package-initialize)
+(unless package-archive-contents
+ (package-refresh-contents))
+
+(unless (package-installed-p 'use-package)
+   (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure t)
+#+end_src
+
+* Ivy, Counsel and Swiper
+** Ivy
+#+begin_src emacs-lisp
+(use-package ivy
+  :diminish
+  :bind (("C-s" . swiper)
+         :map ivy-minibuffer-map
+         ("TAB" . ivy-alt-done)
+         ("C-l" . ivy-alt-done)
+         ("C-j" . ivy-next-line)
+         ("C-k" . ivy-previous-line)
+         :map ivy-switch-buffer-map
+         ("C-k" . ivy-previous-line)
+         ("C-l" . ivy-done)
+         ("C-d" . ivy-switch-buffer-kill)
+         :map ivy-reverse-i-search-map
+         ("C-k" . ivy-previous-line)
+         ("C-d" . ivy-reverse-i-search-kill))
+  :config (ivy-mode 1)
+  :custom (ivy-count-format "(%d/%d)"))
+#+end_src
+
+** Counsel
+#+begin_src emacs-lisp
+(use-package counsel
+  :bind (("M-x" . counsel-M-x)
+         ("C-x b" . counsel-ibuffer)
+         ("C-x C-f" . counsel-find-file)
+         :map minibuffer-local-map
+         ("C-r" . 'counsel-minibuffer-history)))
+#+end_src
+
+** Make ivy completion better
+=ivy-rich= shows some nice help lines next to the command/file in ivy completion
+
+#+begin_src emacs-lisp
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
+#+end_src
+
+** Show the Ivy minibuffer in the middle of the screen
+The constant width hack is from [[https://github.com/tumashu/ivy-posframe/issues/105][a github issue]].
+
+#+begin_src emacs-lisp
+  (use-package ivy-posframe
+    :init (ivy-posframe-mode 1)
+    :config
+    ;; constant width
+    (defun da/ivy-posframe-get-size ()
+      "Set the ivy-posframe size according to the current frame."
+      (let ((height (or ivy-posframe-height (or ivy-height 10)))
+            (width (min (or ivy-posframe-width 200) (round (* .60 (frame-width))))))
+        (list :height height :width width :min-height height :min-width width)))
+
+    (setq ivy-posframe-size-function 'da/ivy-posframe-get-size)
+
+    :custom (ivy-posframe-display-functions-alist
+              '((swiper          . ivy-posframe-display-at-frame-center)
+                (complete-symbol . ivy-posframe-display-at-frame-center)
+                (counsel-M-x     . ivy-posframe-display-at-frame-center)
+                (t               . ivy-posframe-display))))
+#+end_src
+
+* Aesthetics
+** Nicer font
+#+begin_src emacs-lisp
+(set-face-attribute 'default nil :font "VictorMono Nerd Font Mono" :height 100)
+#+end_src
+
+** Icons
+Nicer icons for Emacs, if these don't show up just run =M-x all-the-icons-install-fonts=.
+
+#+begin_src emacs-lisp
+(use-package all-the-icons)
+#+end_src
+
+** Themes
+#+begin_src emacs-lisp
+(use-package doom-themes
+  :init (load-theme 'doom-snazzy t))
+#+end_src
+
+** Modeline
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :init (doom-modeline-mode 1)
+	(display-time-mode 1)
+	(set-face-attribute 'mode-line nil :height 90)
+  :custom ((doom-modeline-height 30)
+	   (doom-modeline-bar-width 10)
+	   (display-time-24hr-format t)
+	   (display-time-default-load-average nil)))
+#+end_src
+
+** Color matching delimeters
+#+begin_src emacs-lisp
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+
+* QOL packages
+Packages that improve general user experience.
+
+** =which-key=
+Show prompt in minibuffer during incomplete keybindings to help re-inforce keymap.
+#+begin_src emacs-lisp
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 1))
+#+end_src
+
+** Better help pages
+=helpful= beautifies the help pages and adds some nice functionality to them
+
+#+begin_src emacs-lisp
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
+#+end_src
+
+* Keybindings
+** Evil
+A vim emulation layer for Emacs, very useful for stubborn Vim defectors.
+
+#+begin_src emacs-lisp
+(use-package evil
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-i-jump nil)
+  (setq-default evil-escape-key-sequence "jk")
+  :config
+  (evil-mode 1)
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
+  (evil-set-initial-state 'dashboard-mode 'normal))
+#+end_src
+
+*** Make Evil behave nicely with the rest of Emacs
+=evil-collection= creates Vim-like keybindings in other Emacs modes.
+
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :after evil magit
+  :config
+  (evil-collection-init))
+#+end_src
+
+*** Make =jk= leave normal mode
+#+begin_src emacs-lisp
+(use-package evil-escape
+  :init (setq-default evil-escape-key-sequence "jk")
+  :config (evil-escape-mode))
+#+end_src
+
+*** =surround.vim= for Evil
+#+begin_src emacs-lisp
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
+#+end_src
+
+** Better keybindings
+General makes it easier to create keybindings.
+
+#+begin_src emacs-lisp
+(use-package general
+  :config
+  (general-create-definer my/leader
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+  (my/leader
+    "w"   'save-buffer
+    "SPC" 'da/save-all
+    "q"   'delete-window
+    "s"   'vterm
+    "b"   'counsel-ibuffer
+    "g"   'magit
+    "a"   'org-agenda
+    "c"   'org-capture
+    "x"   'counsel-M-x
+    "p"   'counsel-find-file
+    "t"   'counsel-find-file))
+#+end_src
+
+* Syntax highlighting and language-specific modes
+** Markdown
+#+begin_src emacs-lisp
+(use-package markdown-mode)
+#+end_src
+
+** Fish
+#+begin_src emacs-lisp
+(use-package fish-mode)
+#+end_src
+
+* Developer Tools
+** VTerm
+=ansi-term= doesn't play well some of the escape sequences fish uses, but vterm seems to do fine. I also set the encoding to =utf-8= so it can render some of the weirder characters.
+
+#+begin_src emacs-lisp
+(use-package vterm
+  :ensure t
+  :config
+  (add-hook 'vterm-mode-hook
+     (function
+      (lambda ()
+        (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix)))))
+#+end_src
+
+** Magit
+Git integration for Emacs
+
+#+begin_src emacs-lisp
+(use-package magit
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+#+end_src
+
+*** Use Delta for the diffs
+#+begin_src emacs-lisp
+(use-package magit-delta
+  :hook (magit-mode . magit-delta-mode))
+#+end_src
+
+** Show git diff in gutter
+#+begin_src emacs-lisp
+(use-package diff-hl
+  :config
+  (add-hook 'prog-mode-hook 'turn-on-diff-hl-mode)
+  (add-hook 'vc-dir-mode-hook 'turn-on-diff-hl-mode))
+#+end_src
+
+* Utility functions
+** Save all files
+#+begin_src emacs-lisp
+  (defun da/save-all () (interactive)
+         (save-some-buffers t))
+#+end_src
+
+* Org-mode
+** Fonts and Aesthetics
+#+begin_src emacs-lisp
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+  ;; Hide the ugly stuff
+  (setq org-hide-emphasis-markers t)
+
+  ;; Neater ellipsis
+  (setq org-ellipsis " ▾")
+
+  ;; Set faces for heading levels
+  (dolist (face '((org-level-1 . 1.05)
+                  (org-level-2 . 1.05)
+                  (org-level-3 . 1.05)
+                  (org-level-4 . 1.05)
+                  (org-level-5 . 1.05)
+                  (org-level-6 . 1.05)
+                  (org-level-7 . 1.05)
+                  (org-level-8 . 1.05)))
+    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+  (set-face-attribute 'variable-pitch nil :font "Cantarell" :height 110)
+
+  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch :height 100)
+  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
+
+  (defun da/org-mode-hook ()
+    ;; Indent sub headings
+    (org-indent-mode 1)
+    ;; Variable width fonts
+    (variable-pitch-mode 1)
+    ;; Soft wrap lines
+    (visual-line-mode 1)
+    ;; No line numbers
+    (display-line-numbers-mode 0))
+#+end_src
+
+** Visual fill column
+Decrease window text and center window.
+
+#+begin_src emacs-lisp
+(defun da/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . da/org-mode-visual-fill))
+#+end_src
+
+** Bullets
+#+begin_src emacs-lisp
+(use-package org-bullets
+  :after org
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("●" "●" "●" "●" "●" "●" "●")))
+#+end_src
+
+** Vim keybindings
+#+begin_src emacs-lisp
+(use-package evil-org
+  :ensure t
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+#+end_src
+
+** Agenda
+#+begin_src emacs-lisp
+  (setq org-agenda-files (directory-files-recursively "~/notes/" "\\.org$"))
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+#+end_src
+
+** Capture
+#+begin_src emacs-lisp
+  (setq org-default-notes-file "~/notes/capture.org")
+  (setq org-capture-templates
+    '(("l" "Link" entry (file+datetree "~/notes/links.org")
+       "* %?\nEntered on %U\n  %i\n")))
+#+end_src
+
+** Install latest org-mode
+#+begin_src emacs-lisp
+  (use-package org
+    :hook (org-mode . da/org-mode-hook)
+    :config
+    ;; Templates
+    (require 'org-tempo))
+#+end_src
