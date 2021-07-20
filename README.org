@@ -373,6 +373,12 @@ Git integration for Emacs
   (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
   (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
 
+  ;; Properties and drawer
+  (set-face-attribute 'org-special-keyword nil :inherit 'fixed-pitch :height 90 :foreground "#aaaaaa")
+  (set-face-attribute 'org-property-value nil :inherit 'fixed-pitch :height 90 :foreground "#aaaaaa")
+  (set-face-attribute 'org-drawer nil :inherit 'fixed-pitch :height 90 :foreground "#aaaaaa")
+  (set-face-attribute 'org-date nil :inherit 'fixed-pitch :height 90 :foreground "#aaaaaa")
+
   (defun da/org-mode-hook ()
     ;; Indent sub headings
     (org-indent-mode 1)
@@ -431,19 +437,35 @@ The [[https://orgmode.org/manual/Template-expansion.html#Template-expansion][Tem
 #+begin_src emacs-lisp
   (setq org-default-notes-file "~/notes/capture.org")
   (setq org-capture-templates
-    '(("l" "Link" entry (file "~/notes/links.org")
-       "* [[%x][%?]]\n:PROPERTIES:\n:Tags: %^g\n:END:\n%U")
+    '(("l"                          ; hotkey
+       "Link"                       ; description
+       entry                        ; capture type
+       (file "~/notes/links.org")   ; target
+       "* [[%^{Link}][%^{Description}]]\n:PROPERTIES:\n:Tags: %^g\n:END:\n%U" ; template
+       )
+
       ("b" "Book" entry (file "~/notes/books.org")
-        "* %?\n%U\n:PROPERTIES:\n:Author: %?\n:Tags: %^g\n:END:\n")
+        "* %^{Name}\n%U\n:PROPERTIES:\n:Author: %^{Author}\n:Tags: %^g\n:END:\n")
+
       ("c" "College Index" entry (file+headline "~/notes/College/College.org" "Index")
         "* %?\n%T")
+
+      ("m" "Ear Medication" entry (file "~/notes/ear-meds.org")
+        "* Atarax + Candiderma - both ears\n%U")
+
       ("r" "Resource (something you'd like to get back to)" entry (file "~/notes/for-later.org")
-        "* [[%x][%?]]\n%U\n:PROPERTIES:\n:Tags: %^g\n:END:\n")))
+        "* [[%^{Link}][%^{Description}]]\n%U\n:PROPERTIES:\n:Tags: %^g\n:END:\n")))
 #+end_src
 
 *** Capture templates I'd like
 **** Timestamped entry into my weekly file
-Function which searches for current weekly file, and today's heading.
+Function which searches for current weekly file, and today's heading. I'll have to look into the =function= org-capture target.
+
+** Todo states
+#+begin_src emacs-lisp
+(setq org-todo-keywords
+      '((sequence "TODO" "EVENT" "WAITING" "|" "CANCELLED" "DONE" "POSTPONED")))
+#+end_src>
 
 ** Install latest org-mode
 #+begin_src emacs-lisp
