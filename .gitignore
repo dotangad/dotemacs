@@ -6,3 +6,7 @@ transient/
 bookmarks
 tags
 README.el
+/.lsp-session-v1
+/projectile-bookmarks.eld
+/.cache/
+/lsp-cache/
