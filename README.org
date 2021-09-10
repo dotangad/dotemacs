@@ -1,4 +1,4 @@
-#+title: Angad Singh's Emacs Config
+#+TITLE: Angad Singh's Emacs Config
 
 Heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs From Scratch]].
 
@@ -6,6 +6,25 @@ Heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs From 
 #+begin_src emacs-lisp
 (setq user-full-name "Angad Singh"
       user-mail-address "mail@angad.dev")
+#+end_src
+
+* Package management and =use-package=
+#+begin_src emacs-lisp
+(require 'package)
+
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+
+(package-initialize)
+(unless package-archive-contents
+ (package-refresh-contents))
+
+(unless (package-installed-p 'use-package)
+   (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure t)
 #+end_src
 
 * Improvements
@@ -18,7 +37,7 @@ Heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs From 
   (set-fringe-mode 1)
   (blink-cursor-mode -1)
   (global-hl-line-mode 1)
-  (toggle-frame-fullscreen)
+  (toggle-frame-maximized)
 #+end_src
 
 ** No audible bell
@@ -65,8 +84,9 @@ Heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs From 
 
 ** Line and column numbers
 #+begin_src emacs-lisp
-(column-number-mode)
-(global-display-line-numbers-mode t)
+  (column-number-mode)
+  ;; (global-display-line-numbers-mode t)
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 #+end_src
 
 *** Switch them off in some modes
@@ -77,9 +97,7 @@ Heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs From 
                 shell-mode-hook
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
-
 #+end_src
-
 
 ** Indentation
 #+begin_src emacs-lisp
@@ -87,23 +105,13 @@ Heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs From 
   (setq tab-width 2)
 #+end_src
 
-* Package management and =use-package=
+** Secrets
 #+begin_src emacs-lisp
-(require 'package)
-
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
-
-(package-initialize)
-(unless package-archive-contents
- (package-refresh-contents))
-
-(unless (package-installed-p 'use-package)
-   (package-install 'use-package))
-
-(require 'use-package)
-(setq use-package-always-ensure t)
+  (add-to-list 'load-path
+               (concat
+                (file-name-as-directory user-emacs-directory)
+                "secrets.el"))
+  (require 'secrets)
 #+end_src
 
 * Ivy, Counsel and Swiper
@@ -174,7 +182,34 @@ The constant width hack is from [[https://github.com/tumashu/ivy-posframe/issues
 * Aesthetics
 ** Nicer font
 #+begin_src emacs-lisp
-(set-face-attribute 'default nil :font "VictorMono Nerd Font Mono" :height 100)
+  (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font Mono" :height 90)
+  (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font Mono" :height 90)
+  (set-face-attribute 'variable-pitch nil :font "Source Sans Pro" :height 110 :weight 'regular)
+#+end_src
+
+** Ligatures
+Ligatures make Emacs too slow, there's a significant input lag when typing after typing a ligature (not rendering one).
+#+begin_src emacs-lisp
+  ;; (load-file "~/.emacs.d/site-lisp/ligature/ligature.el")
+  ;; (use-package ligature
+  ;;   :load-path "path-to-ligature-repo"
+  ;;   :config
+  ;;   (ligature-set-ligatures
+  ;;    't
+  ;;    '("|||>" "<|||" "<==>" "<!--" "~~>" "***" "||=" "||>"
+  ;;      ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+  ;;      "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+  ;;      "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+  ;;      "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+  ;;      "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+  ;;      "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+  ;;      "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+  ;;      ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+  ;;      "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+  ;;      "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+  ;;      "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+  ;;      "\\\\" "://" "www"))
+  ;;   (global-ligature-mode t))
 #+end_src
 
 ** Icons
@@ -187,7 +222,7 @@ Nicer icons for Emacs, if these don't show up just run =M-x all-the-icons-instal
 ** Themes
 #+begin_src emacs-lisp
 (use-package doom-themes
-  :init (load-theme 'doom-Iosvkem  t))
+  :init (load-theme 'doom-nord t))
 #+end_src
 
 ** Modeline
@@ -195,9 +230,10 @@ Nicer icons for Emacs, if these don't show up just run =M-x all-the-icons-instal
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
 	(display-time-mode 1)
-	(set-face-attribute 'mode-line nil :height 90)
-  :custom ((doom-modeline-height 30)
-	   (doom-modeline-bar-width 10)
+	(set-face-attribute 'mode-line nil :height 80)
+	(set-face-attribute 'mode-line-inactive nil :height 80)
+  :custom ((doom-modeline-height 35)
+	   (doom-modeline-bar-width 0)
 	   (display-time-24hr-format t)
 	   (display-time-default-load-average nil)))
 #+end_src
@@ -304,7 +340,7 @@ General makes it easier to create keybindings.
       "w"   'save-buffer
       "SPC" 'da/save-all
       "q"   'delete-window
-      "s"   'vterm
+      "s"   'multi-vterm-project
       "b"   'counsel-ibuffer
       "g"   'magit
       "a"   'org-agenda
@@ -324,18 +360,32 @@ General makes it easier to create keybindings.
 (use-package fish-mode)
 #+end_src
 
+** JSON
+#+begin_src emacs-lisp
+  (use-package json-mode)
+#+end_src
+
 * Misc Developer Tools
 ** VTerm
 =ansi-term= doesn't play well some of the escape sequences fish uses, but vterm seems to do fine. I also set the encoding to =utf-8= so it can render some of the weirder characters.
 
 #+begin_src emacs-lisp
-(use-package vterm
-  :ensure t
-  :config
-  (add-hook 'vterm-mode-hook
-     (function
-      (lambda ()
-        (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix)))))
+  (use-package vterm
+    :ensure t
+    :config
+    (add-hook 'vterm-mode-hook
+        (lambda ()
+          (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))))
+#+end_src
+
+*** Manage multiple vterm buffers
+This lets me manage multiple vterm buffers, much easier than running tmux inside emacs.
+#+begin_src emacs-lisp
+  (use-package multi-vterm
+    :bind (:map vterm-mode-map
+                ("C-c n" . multi-vterm)
+                ("C-c l" . multi-vterm-next)
+                ("C-c h" . multi-vterm-prev)))
 #+end_src
 
 ** Magit
@@ -349,8 +399,8 @@ Git integration for Emacs
 
 *** Use Delta for the diffs
 #+begin_src emacs-lisp
-(use-package magit-delta
-  :hook (magit-mode . magit-delta-mode))
+  (use-package magit-delta
+    :hook (magit-mode . magit-delta-mode))
 #+end_src
 
 ** Show git diff in gutter
@@ -410,6 +460,9 @@ Git integration for Emacs
     :init
     (setq lsp-keymap-prefix "C-l")
     (setq lsp-ui-doc-position 'at-point)
+    (setq read-process-output-max 1048576)
+    (setq gc-cons-threshold 100000000)
+    (setq lsp-idle-delay 0.500)
     :config
     (lsp-enable-which-key-integration t))
 #+end_src
@@ -448,15 +501,17 @@ Git integration for Emacs
 
 ** Keybindings
 #+begin_src emacs-lisp
-(evil-define-key 'normal lsp-mode-map (kbd "SPC l") lsp-command-map)
-(evil-define-key 'normal lsp-mode-map (kbd "SPC d") 'flymake-show-diagnostics-buffer)
+  (evil-define-key 'normal lsp-mode-map (kbd "SPC l") lsp-command-map)
+  (evil-define-key 'normal lsp-mode-map (kbd "SPC d") 'flymake-show-diagnostics-buffer)
 #+end_src
 
 ** Format on save
 #+begin_src emacs-lisp
   (defun da/format-on-save ()
-    (when (member major-mode '(typescript-mode javascript-mode php-mode web-mode))
-      (lsp-format-buffer)))
+    (when (member major-mode '(php-mode web-mode))
+      (lsp-format-buffer))
+    (when (member major-mode '(js-mode typescript-mode))
+      (lsp-eslint-apply-all-fixes)))
 
   (add-hook 'before-save-hook 'da/format-on-save)
 #+end_src
@@ -492,6 +547,7 @@ Git integration for Emacs
     :hook (web-mode . lsp-deferred)
     :config
     (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.css?\\'" . web-mode))
     (setq web-mode-engines-alist '(("blade"  . "\\.blade\\.")
                                    ("js" . "\\.tsx")))
     (setq web-mode-css-indent-offset 2)
@@ -506,6 +562,7 @@ Git integration for Emacs
   (use-package php-mode
     :mode "\\.php\\'"
     :hook (php-mode . lsp-deferred)
+    :hook (php-mode . (lambda () (setq-local c-basic-offset 2)))
     :config
     (setq c-basic-offset 2))
 #+end_src
@@ -521,12 +578,16 @@ From [[https://gist.github.com/rangeoshun/67cb17392c523579bc6cbd758b2315c1][this
   (setq mmm-global-mode t)
   (setq mmm-submode-decoration-level 0) ;; Turn off background highlight
 
+  ;; Turn off mmm-mode in org-mode
+  (add-to-list 'mmm-never-modes 'org-mode)
+  (add-to-list 'mmm-never-modes 'org-agenda-mode)
+
   ;; Add css mode for CSS in JS blocks
   (mmm-add-classes
     '((mmm-styled-mode
       :submode css-mode
       :front "\\(styled\\|css\\)[.()<>[:alnum:]]?+`"
-      :back "`;")))
+      :back "`;?")))
 
   (mmm-add-mode-ext-class 'typescript-mode nil 'mmm-styled-mode)
 
@@ -535,7 +596,7 @@ From [[https://gist.github.com/rangeoshun/67cb17392c523579bc6cbd758b2315c1][this
     '((mmm-graphql-mode
       :submode graphql-mode
       :front "gr?a?p?h?ql`"
-      :back "`;")))
+      :back "`;?")))
 
   (mmm-add-mode-ext-class 'typescript-mode nil 'mmm-graphql-mode)
 
@@ -591,6 +652,23 @@ From [[https://gist.github.com/rangeoshun/67cb17392c523579bc6cbd758b2315c1][this
     (org-display-inline-images)))
 #+end_src
 
+*** Get level 1 headings
+#+begin_src emacs-lisp
+  (defun da/org-get-level-1-headings (filename)
+    (mapcar 'substring-no-properties
+            (org-ql-query
+              :select #'org-get-heading
+              :from filename
+              :where '(level 1))))
+#+end_src
+
+*** Re-index agenda files
+#+begin_src emacs-lisp
+  (defun da/org-refresh-agenda-files ()
+    (interactive)
+    (setq org-agenda-files (directory-files-recursively org-directory "\\.org$")))
+#+end_src
+
 ** Fonts and Aesthetics
 #+begin_src emacs-lisp
   (defun da/org-mode-aesthetics ()
@@ -600,30 +678,71 @@ From [[https://gist.github.com/rangeoshun/67cb17392c523579bc6cbd758b2315c1][this
     ;; Neater ellipsis
     (setq org-ellipsis " ▾")
 
+    (font-lock-add-keywords 'org-mode
+                            '(("^ *\\([-]\\) "
+                               (0 (prog1 ()
+                                    (compose-region
+                                     (match-beginning 1)
+                                     (match-end 1) "•"))))))
+
+    ;; Set faces for heading levels
+    (dolist (face '((org-level-1 . 1.2)
+                    (org-level-2 . 1.1)
+                    (org-level-3 . 1.1)
+                    (org-level-4 . 1.1)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil
+                          :inherit 'default
+                          :weight 'regular
+                          :height (cdr face)))
+
+    ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+    (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)
 
     ;; Properties and drawer
     (set-face-attribute 'org-special-keyword nil
                         :inherit 'fixed-pitch
-                        :height 90
+                        :height 80
                         :foreground "#aaaaaa")
     (set-face-attribute 'org-property-value nil
                         :inherit 'fixed-pitch
-                        :height 90
+                        :height 80
                         :foreground "#aaaaaa")
-    (set-face-attribute 'org-drawer nil :inherit 'fixed-pitch :height 90
+    (set-face-attribute 'org-drawer nil
+                        :inherit 'fixed-pitch
+                        :height 80
                         :foreground "#aaaaaa")
-    (set-face-attribute 'org-date nil :inherit 'fixed-pitch
-                        :height 90
+    (set-face-attribute 'org-date nil
+                        :inherit 'fixed-pitch
+                        :height 80
                         :foreground "#aaaaaa")
-    (set-face-attribute 'org-done nil :inherit 'fixed-pitch
+    (set-face-attribute 'org-done nil
+                        :inherit 'default
                         :foreground "#666666"
-                        :background "#00000000"))
+                        :background nil))
 
   (defun da/org-mode-hook ()
-    ;; Indent sub headings
-    (org-indent-mode 1)
     ;; Soft wrap lines
     (visual-line-mode 1)
+    ;; Variable pitch fonts
+    (variable-pitch-mode 1)
+    ;; Indent sub headings
+    (setq org-indent-indentation-per-level 2)
+    (org-indent-mode 1)
+    (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
     ;; No line numbers
     (display-line-numbers-mode 0))
 #+end_src
@@ -632,22 +751,24 @@ From [[https://gist.github.com/rangeoshun/67cb17392c523579bc6cbd758b2315c1][this
 Decrease window text and center window.
 
 #+begin_src emacs-lisp
-(defun da/org-mode-visual-fill ()
-  (setq visual-fill-column-width 150
-        visual-fill-column-center-text t)
-  (visual-fill-column-mode 1))
+  (defun da/org-mode-visual-fill ()
+    (setq visual-fill-column-width 120
+          visual-fill-column-center-text t)
+    (visual-fill-column-mode 1))
 
-(use-package visual-fill-column
-  :hook (org-mode . da/org-mode-visual-fill))
+  (da/org-mode-visual-fill)
+
+  (use-package visual-fill-column
+    :hook (org-mode . da/org-mode-visual-fill))
 #+end_src
 
 ** Bullets
 #+begin_src emacs-lisp
-(use-package org-bullets
-  :after org
-  :hook (org-mode . org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("●" "●" "●" "●" "●" "●" "●")))
+  (use-package org-bullets
+    :after org
+    :hook (org-mode . org-bullets-mode)
+    :custom
+    (org-bullets-bullet-list '("●" "●" "●" "●" "●" "●" "●")))
 #+end_src
 
 ** Keybindings
@@ -721,23 +842,77 @@ The [[https://orgmode.org/manual/Template-expansion.html#Template-expansion][Tem
        "Link"                       ; description
        entry                        ; capture type
        (file "~/notes/links.org")   ; target
-       "* [[%^{Link}][%^{Description}]]\n:PROPERTIES:\n:Tags: %^g\n:END:\n%U" ; template
+       "* [[%^{Link}][%^{Description}]]\n%U\n:PROPERTIES:\n:Tags: %^g\n:END:\n" ; template
        )
 
-      ("b" "Book" entry (file (lambda () (da/org-subdir "books.org")))
-        "* %^{Name}\n%U\n:PROPERTIES:\n:Author: %^{Author}\n:Tags: %^g\n:END:\n")
+      ("b" "Books")
 
-      ("c" "College Index" entry (file+headline (lambda () (da/org-subdir "college-apps/college-apps.org")) "Inbox")
-        "* %?\n%T")
-    
-      ("n" "Note (today's heading in weekly file)" entry (function da/open-weekly-file-today)
-        "\n\n* %?\n%T\n\n")
+      ("bu"
+       "Book (from URL)"
+       entry
+       (file (lambda () (da/org-subdir "books/reading-list.org")))
+       "%(let* ((url (substring-no-properties (read-string \"URL: \")))
+                    (details (org-books-get-details url)))
+               (when details (apply #'org-books-format 1 details)))"
+       :immediate-finish t)
 
-      ("m" "Ear Medication" entry (file (lambda ()(da/org-subdir "ear-meds.org")))
-        "* Atarax + Candiderma - both ears\n%U")
+      ("bk"
+       "Book (from clipboard)"
+       entry
+       (file (lambda () (da/org-subdir "books/reading-list.org")))
+       "%(let* ((url (substring-no-properties (current-kill 0)))
+                    (details (org-books-get-details url)))
+               (when details (apply #'org-books-format 1 details)))"
+       :immediate-finish t)
 
-      ("r" "Resource (something you'd like to get back to)" entry (file (lambda () (da/org-subdir "for-later.org")))
-        "* [[%^{Link}][%^{Description}]]\n%U\n:PROPERTIES:\n:Tags: %^g\n:END:\n")))
+      ("bl" "Book log"
+       entry
+       (function org-books-visit-book-log)
+       "* %U - %?")
+
+      ("c"
+       "College Inbox"
+       entry
+       (file+headline (lambda () (da/org-subdir "college-apps/college-apps.org")) "Inbox")
+       "* %?\n%T")
+
+      ("i" "Inbox (Weekly File)")
+      ("it"
+       "Todo"
+       entry
+       (file+headline (lambda () (da/weekly-file)) "Inbox")
+       "\n\n* TODO %?\n%U\n\n")
+
+      ("in"
+       "Reminder"
+       entry
+       (file+headline (lambda () (da/weekly-file)) "Inbox")
+       "\n\n* %?\n%T\n\n")
+
+      ("ie"
+       "Event"
+       entry
+       (file+headline (lambda () (da/weekly-file)) "Inbox")
+       "\n\n* EVENT %?\n%T\n\n")
+
+      ("n"
+       "Note (today's heading in weekly file)"
+       entry
+       (function da/open-weekly-file-today)
+       "\n\n* %?\n%T\n\n")
+
+      ("f"
+       "For Later"
+       entry
+       (file (lambda () (da/org-subdir "for-later.org")))
+       "* %?\n%U\n:PROPERTIES:\n:Tags: %^g\n:END:\n")
+
+      ("s"
+       "Study Log"
+       entry
+       (file+datetree
+        (lambda () (da/org-subdir "Academics/Study Log.org")))
+       "* %?\n%U\n\n")))
 #+end_src
 
 ** Load org-babel languages
@@ -757,8 +932,77 @@ The [[https://orgmode.org/manual/Template-expansion.html#Template-expansion][Tem
     :config
     (da/org-mode-aesthetics)
     (setq org-todo-keywords
-          '((sequence "TODO" "EVENT" "WAITING" "|" "CANCELLED" "DONE" "POSTPONED")))
+          '((sequence "READING" "EVENT" "TODO" "DOING" "|" "DONE" "CANCELLED")))
+    (setq org-agenda-span 'day)
+    (add-to-list 'org-modules 'org-habit)
     ;; Templates
     (require 'org-tempo))
 #+end_src
 
+** Better search
+#+begin_src emacs-lisp
+  (use-package deft
+    :config
+    (setq deft-extensions '("txt" "tex" "org"))
+    (setq deft-directory "~/notes")
+    (setq deft-recursive t)
+    (general-nmap "SPC n s" 'deft)
+    ;; Start in insert mode for deft buffers
+    (add-to-list 'evil-insert-state-modes 'deft-mode))
+#+end_src
+
+** LaTeX preview
+=C-c C-x C-l= over a LaTeX block to toggle preview.
+#+begin_src emacs-lisp
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 1.3))
+#+end_src
+
+** Pomodoro
+#+begin_src emacs-lisp
+  (use-package org-pomodoro
+    :bind (:map org-mode-map
+                ("C-c C-x C-p" . org-pomodoro))
+    :config
+    (setq org-pomodoro-manual-break t)
+    (setq org-pomodoro-keep-killed-pomodoro-time t)
+    (setq org-pomodoro-length 35)
+    (setq org-pomodoro-play-sounds t)
+    (setq org-pomodoro-short-break-sound
+          (concat
+           (file-name-as-directory user-emacs-directory)
+           "org-pomodoro.wav"))
+    (setq org-pomodoro-long-break-sound
+          (concat
+           (file-name-as-directory user-emacs-directory)
+           "org-pomodoro.wav"))
+    (setq org-pomodoro-overtime-break-sound
+          (concat
+           (file-name-as-directory user-emacs-directory)
+           "org-pomodoro.wav"))
+    (setq org-pomodoro-finished-sound nil))
+#+end_src
+
+** org-ql
+#+begin_src emacs-lisp
+  (use-package org-ql)
+#+end_src
+
+** org-books: Track reading
+#+begin_src emacs-lisp
+  (use-package org-books
+    :config
+    (setq org-books-file (da/org-subdir "books/reading-list.org")))
+#+end_src
+
+** org-gcal
+#+begin_src emacs-lisp
+  ;; (setq package-check-signature nil)
+
+  ;; (use-package org-gcal
+  ;;   :ensure t
+  ;;   :config
+  ;;   (setq org-gcal-file-alist '(("angadsingh567890@gmail.com" . "~/notes/gcal.org"))))
+
+  ;; (add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync)))
+  ;; (add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync)))
+#+end_src

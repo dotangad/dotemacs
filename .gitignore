@@ -10,3 +10,13 @@ README.el
 /projectile-bookmarks.eld
 /.cache/
 /lsp-cache/
+/secrets.el
+.org-generic-id-locations
+.org-id-locations
+org-gcal
+org-raom.db
+persist
+request
+site-lisp
+url
+org-roam.db
